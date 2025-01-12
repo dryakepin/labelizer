@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beer Label Generator</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Beer Label Generator</h1>
+            <p class="subtitle">Create custom labels for your craft beer</p>
+        </header>
+        
+        <div class="content-wrapper">
+            <form id="labelForm" class="form-section">
+                <div class="form-group file-upload">
+                    <label for="background">Background Image</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="background" name="background" accept=".png,.jpg,.jpeg" required>
+                        <div class="file-input-placeholder">
+                            <span>Drop image here or click to upload</span>
+                            <small>PNG, JPG up to 16MB</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group image-controls">
+                    <h3>Image Adjustments</h3>
+                    
+                    <div class="form-group">
+                        <label for="crop_x">Horizontal Crop Position</label>
+                        <input type="range" id="crop_x" name="crop_x" 
+                               value="50" min="0" max="100" step="1">
+                        <span class="range-value" id="crop_x_value">50%</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="crop_y">Vertical Crop Position</label>
+                        <input type="range" id="crop_y" name="crop_y" 
+                               value="50" min="0" max="100" step="1">
+                        <span class="range-value" id="crop_y_value">50%</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="image_rotation">Rotation</label>
+                        <div class="range-with-number">
+                            <input type="range" id="image_rotation_range" 
+                                   value="0" min="-180" max="180" step="5">
+                            <input type="number" id="image_rotation" name="image_rotation" 
+                                   value="0" min="-180" max="180" step="5">
+                            <span class="unit">°</span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="image_x">X Position</label>
+                            <input type="number" id="image_x" name="image_x" 
+                                   value="50" min="0" max="100" step="5">
+                        </div>
+                        <div class="form-group">
+                            <label for="image_y">Y Position</label>
+                            <input type="number" id="image_y" name="image_y" 
+                                   value="50" min="0" max="100" step="5">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="beer_name">Beer Name</label>
+                        <input type="text" id="beer_name" name="beer_name" required 
+                               placeholder="e.g., Hoppy Sunset IPA">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="brewer_name">Subtitle</label>
+                        <input type="text" id="brewer_name" name="brewer_name" required
+                               placeholder="e.g., India Pale Ale">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="abv">ABV (%)</label>
+                        <input type="number" id="abv" name="abv" step="0.1" required
+                               placeholder="e.g., 5.5">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="font_size">Font Size</label>
+                        <input type="number" id="font_size" name="font_size" 
+                               value="24" min="12" max="72">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="beer_size">Beer Size</label>
+                    <select id="beer_size" name="beer_size" required>
+                        <option value="330ML">330ML</option>
+                        <option value="500ML" selected>500ML</option>
+                        <option value="1L">1L</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group color-input">
+                        <label for="border_color">Border Color</label>
+                        <div class="color-preview-wrapper">
+                            <input type="color" id="border_color" name="border_color" value="#000000">
+                            <span class="color-preview" id="border_color_preview">#000000</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group color-input">
+                        <label for="text_color">Text Color</label>
+                        <div class="color-preview-wrapper">
+                            <input type="color" id="text_color" name="text_color" value="#000000">
+                            <span class="color-preview" id="text_color_preview">#000000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="font">Font Style</label>
+                    <select id="font" name="font">
+                        <option value="Arial">Arial</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Helvetica">Helvetica</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="primary-button">Generate Preview</button>
+            </form>
+            
+            <div id="preview" class="preview-section" style="display: none;">
+                <h2>Preview</h2>
+                <div class="preview-image-wrapper">
+                    <img id="previewImage" src="" alt="Label Preview">
+                </div>
+                <button id="generatePDF" class="secondary-button">Download PDF</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/preview.js') }}"></script>
+</body>
+</html> 
