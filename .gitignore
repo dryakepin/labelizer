@@ -42,3 +42,7 @@ htmlcov/
 *.cover
 .cache
 noset
+
+# Uploaded files
+static/uploads/
+
