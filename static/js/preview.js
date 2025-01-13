@@ -38,8 +38,7 @@ const formControls = [
     'font_size',
     'image_x',
     'image_y',
-    'crop_x',
-    'crop_y'
+    'crop_x'
 ];
 
 // Handle form submission
@@ -116,7 +115,6 @@ function updateRangeValue(inputId) {
 }
 
 updateRangeValue('crop_x');
-updateRangeValue('crop_y');
 
 // File upload preview
 document.getElementById('background').addEventListener('change', function(e) {
@@ -152,7 +150,6 @@ document.getElementById('generatePDF').onclick = async () => {
         image_x: parseInt(formData.get('image_x'), 10),
         image_y: parseInt(formData.get('image_y'), 10),
         crop_x: parseInt(formData.get('crop_x'), 10),
-        crop_y: parseInt(formData.get('crop_y'), 10),
     };
     
     const pdfResponse = await fetch('/generate-pdf', {

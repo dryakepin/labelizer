@@ -40,7 +40,7 @@ def upload_file():
             'border_color': request.form.get('border_color', '#000000'),
             'text_color': request.form.get('text_color', '#000000'),
             'font': request.form.get('font', 'Arial'),
-            'font_size': int(request.form.get('font_size', 24)),
+            'font_size': int(request.form.get('font_size', 32)),
             'image_scale': float(request.form.get('image_scale', 100)),
             'image_rotation': float(request.form.get('image_rotation', 0)),
             'image_x': float(request.form.get('image_x', 50)),
@@ -71,7 +71,9 @@ def generate_pdf():
     
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     generator = BeerLabelGenerator(filepath, label_data)
-    pdf_path = generator.generate_pdf()
+    # Get bottle size from label_data, default to '500ML' if not specified
+    bottle_size = label_data.get('beer_size', '500ML')
+    pdf_path = generator.generate_pdf(bottle_size=bottle_size)
     
     return send_file(pdf_path, as_attachment=True, download_name='beer_label.pdf')
 

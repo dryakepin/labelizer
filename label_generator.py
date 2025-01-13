@@ -8,7 +8,7 @@ class BeerLabelGenerator:
     def __init__(self, image_path, label_data):
         self.image_path = image_path
         self.label_data = label_data.copy()
-        self.label_data['font_size'] = int(self.label_data.get('font_size', 24))
+        self.label_data['font_size'] = int(self.label_data.get('font_size', 32))
         self.preview_folder = 'static/uploads'
     
     def _resize_and_crop(self, img, target_width, target_height):
@@ -43,8 +43,8 @@ class BeerLabelGenerator:
         # Define fonts
         try:
             beer_name_font = ImageFont.truetype('Arial Bold.ttf', self.label_data['font_size'])
-            brewer_font = ImageFont.truetype('Arial.ttf', self.label_data['font_size'] - 4)
-            abv_font = ImageFont.truetype('Arial.ttf', self.label_data['font_size'] - 8)
+            brewer_font = ImageFont.truetype('Arial.ttf', self.label_data['font_size'] - 10)
+            abv_font = ImageFont.truetype('Arial.ttf', self.label_data['font_size'] - 10)
         except:
             beer_name_font = ImageFont.load_default()
             brewer_font = ImageFont.load_default()
@@ -150,194 +150,36 @@ class BeerLabelGenerator:
             return preview_path
 
         return final_img
-
-
-    """
-    def _create_label(self, size, is_preview=True):
-        # Define constants at the start
-        border_width = 1
-        
-        # Define fonts at the start of the method
-        try:
-            beer_name_font = ImageFont.truetype('Arial Bold.ttf', self.label_data['font_size'])
-            brewer_font = ImageFont.truetype('Arial.ttf', self.label_data['font_size'] - 4)
-            abv_font = ImageFont.truetype('Arial.ttf', self.label_data['font_size'] - 8)
-        except:
-            # Fallback to default font if Arial is not available
-            beer_name_font = ImageFont.load_default()
-            brewer_font = ImageFont.load_default()
-            abv_font = ImageFont.load_default()
-
-        # Create a blank canvas if no image is provided
-        if not self.image_path:
-            final_img = Image.new('RGB', size, 'blue')
-        else:
-            # Open and process background image as before
-            img = Image.open(self.image_path)
-            rotation = float(self.label_data.get('image_rotation', 0))
-            x_pos = float(self.label_data.get('image_x', 50)) / 100
-            y_pos = float(self.label_data.get('image_y', 50)) / 100
-            
-            is_bottle = size[1] > size[0]
-            
-            if is_bottle:
-                img = self._resize_and_crop(img, size[0], size[1])
-            else:
-                square_size = min(size)
-                img = self._resize_and_crop(img, square_size, square_size)
-            
-            if rotation != 0:
-                img = img.rotate(rotation, expand=True, resample=Image.Resampling.BICUBIC)
-            
-            final_img = Image.new('RGB', size, 'white')
-            
-            # Calculate the position to paste the image
-            paste_x = int((size[0] - img.width) * x_pos)
-            paste_y = int((size[1] - img.height) * y_pos)
-            
-            final_img.paste(img, (paste_x, paste_y))
-
-        # Create white box
-        box_height = size[0] // 5  # 1/5th of the image width
-        box_width = size[1] - (2 * border_width)
-
-        print ("box width, height")
-        print(box_width, box_height)
-        # Create a separate image for the white box and its contents
-        box_img = Image.new('RGBA', (box_width, box_height), (255, 255, 255, 255))
-        box_draw = ImageDraw.Draw(box_img)
-        
-        margin = 8
-        text_spacing = 8
-        
-        # Calculate text heights and prepare text
-        beer_name = self.label_data['beer_name']
-        brewer_name = self.label_data['brewer_name']
-        beer_size = self.label_data.get('beer_size', '500ML')
-        abv_text = f"{beer_size} // {self.label_data['abv']}%/VOL"
-        
-        # Draw all text vertically (since we're pre-rotating)
-        current_x = margin
-        current_y = margin
-
-        # Draw beer name
-        box_draw.text(
-            (current_x, current_y),
-            beer_name,
-            font=beer_name_font,
-            fill=self.label_data['text_color']
-        )
-        
-        # Calculate next position
-        beer_bbox = box_draw.textbbox((0, 0), beer_name, font=beer_name_font)
-        current_y += beer_bbox[3] - beer_bbox[1] + text_spacing
-        
-        # Draw subtitle (brewer name)
-        box_draw.text( 
-            (current_x, current_y),
-            brewer_name,
-            font=brewer_font,
-            fill=self.label_data['text_color'],
-        )
-        
-        # Calculate next position
-        brewer_bbox = box_draw.textbbox((0, 0), brewer_name, font=brewer_font)
-        current_y += brewer_bbox[3] - brewer_bbox[1] + text_spacing
-        
-        # Draw size and ABV
-        box_draw.text(
-            (current_x, current_y),
-            abv_text,
-            font=abv_font,
-            fill=self.label_data['text_color']
-        )
-
-        # Rotate the box 90 degrees
-        box_img = box_img.rotate(90, expand=True)
-
-        # After rotation, box_width and box_height are swapped
-        # Calculate position to paste the rotated box
-        box_left = size[0] - box_height - border_width  # Use box_height because dimensions are swapped after rotation
-        box_top = (size[1] - box_width) // 2  # Use box_width because dimensions are swapped after rotation
-
-        print("box left, top")
-        print(box_left, box_top)
-
-        # Draw large transparent first letter (adjusted for horizontal layout)
-        first_letter = self.label_data['beer_name'][0] if self.label_data['beer_name'] else ''
-        if first_letter:
-            # Calculate size to fit width of box
-            #target_height = box_height - (2 * margin)
-            letter_size = 100  # Starting size
-            letter_font = None
-            
-            try:
-                letter_font = ImageFont.truetype('Arial Bold.ttf', letter_size)
-            except:
-                letter_font = ImageFont.load_default()
-
-            if letter_font:
-                letter_bbox = box_draw.textbbox((0, 0), first_letter, font=letter_font)
-                letter_width = letter_bbox[2] - letter_bbox[0]
-                letter_height = letter_bbox[3] - letter_bbox[1]
-                
-                # Position at right side
-                letter_x = 40
-                letter_y = 40
-                
-                print ("letter x, y")
-                print(letter_x, letter_y)
-
-                box_draw.text(
-                    (letter_x, letter_y),
-                    first_letter,
-                    font=letter_font,
-                    fill=(0, 0, 0, 64)
-                )
-
-        # Paste the rotated box onto the final image
-        final_img.paste(box_img, (box_left, box_top), mask=box_img)
-        
-        # Draw border last
-        draw = ImageDraw.Draw(final_img)
-        border_width = 1
-        draw.rectangle(
-            [(0, 0), (size[0]-1, size[1]-1)],
-            outline=self.label_data['border_color'],
-            width=border_width
-        )
-        
-        if is_preview:
-            # Save preview image
-            preview_path = os.path.join(self.preview_folder, f'preview_{uuid.uuid4()}.png')
-            final_img.save(preview_path)
-            return preview_path
-        
-        return final_img
-    """
     
     def generate_preview(self):
-        # Generate preview for bottle label (3:4)
-        return self._create_label((450, 600), True)  # 3:4 aspect ratio
+        # Generate preview for bottle label 
+        return self._create_label((540, 600), True)  
     
-    def generate_pdf(self):
+    def generate_pdf(self, bottle_size='500ML'):
+        # Convert cm to points (1 cm = 28.35 points)
+        if bottle_size == '500ML':
+            bottle_width = 9 * 28.35  # 9cm
+            bottle_height = 10 * 28.35  # 10cm
+        else:  # 330ML
+            bottle_width = 6.3 * 28.35  # 6.3cm
+            bottle_height = 7 * 28.35  # 7cm
+
         # Generate both bottle and keg labels
-        bottle_label = self._create_label((450, 600), False)  # 3:4 for bottle
-        keg_label = self._create_label((600, 600), False)    # Square for keg
+        bottle_label = self._create_label((540, 600), False)  # 3:4 for bottle
+        keg_label = self._create_label((540, 600), False)    # Square for keg
         
         # Create PDF
         pdf_path = os.path.join(self.preview_folder, f'labels_{uuid.uuid4()}.pdf')
-        c = canvas.Canvas(pdf_path, pagesize=letter)
+        c = canvas.Canvas(pdf_path, pagesize=A4)
         
         # Page 1: Bottle Labels (2x2 grid)
-        # Calculate dimensions to fit 4 labels on the page with margins
-        page_width, page_height = letter  # typically 612 x 792 points
+        page_width, page_height = A4
         margin = 36  # 0.5 inch margin
         spacing = 20  # space between labels
         
-        # Calculate label size to fit on page
-        label_width = (page_width - 2 * margin - spacing) / 2
-        label_height = (page_height - 2 * margin - spacing) / 2
+        # Use the actual bottle dimensions instead of calculating from page size
+        label_width = bottle_width
+        label_height = bottle_height
         
         # Draw 4 bottle labels in a grid
         positions = [
@@ -350,7 +192,7 @@ class BeerLabelGenerator:
         for x, y in positions:
             c.drawInlineImage(bottle_label, x, y, width=label_width, height=label_height)
             c.setFont("Helvetica", 8)
-            c.drawString(x, y - 10, "Bottle Label (3:4)")
+            c.drawString(x, y - 10, f"Bottle Label ({bottle_size})")
         
         # Add page 2 for keg label
         c.showPage()
