@@ -3,6 +3,8 @@ from werkzeug.utils import secure_filename
 import os
 from label_generator import BeerLabelGenerator
 import uuid
+from labels.label_design_1 import LabelDesign1
+from labels.label_design_2 import LabelDesign2
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -49,8 +51,20 @@ def upload_file():
             'crop_y': float(request.form.get('crop_y', 50)),
         }
         
-        # Generate preview
-        generator = BeerLabelGenerator(filepath, label_data)
+        # Get design type
+        design_type = request.form.get('design_type', 'design1')
+        
+        # Select label design based on design_type
+        label_class = {
+            'design1': LabelDesign1,
+            'design2': LabelDesign2
+        }.get(design_type)
+        
+        if not label_class:
+            return jsonify({'error': 'Invalid design type'}), 400
+        
+        # Generate preview using selected design
+        generator = label_class(filepath, label_data)
         preview_path = generator.generate_preview()
         
         return jsonify({
@@ -65,13 +79,23 @@ def generate_pdf():
     data = request.get_json()
     filename = data.get('filename')
     label_data = data.get('label_data')
+    design_type = data.get('design_type', 'design1')  # Add design type parameter
     
     if not filename or not label_data:
         return jsonify({'error': 'Missing required data'}), 400
     
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    generator = BeerLabelGenerator(filepath, label_data)
-    # Get bottle size from label_data, default to '500ML' if not specified
+    
+    # Select label design based on design_type
+    label_class = {
+        'design1': LabelDesign1,
+        'design2': LabelDesign2
+    }.get(design_type)
+    
+    if not label_class:
+        return jsonify({'error': 'Invalid design type'}), 400
+    
+    generator = label_class(filepath, label_data)
     bottle_size = label_data.get('beer_size', '500ML')
     pdf_path = generator.generate_pdf(bottle_size=bottle_size)
     

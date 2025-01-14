@@ -1,11 +1,10 @@
 from PIL import Image, ImageDraw, ImageFont
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter, A4
 import os
 import uuid
+from .base_label import BaseLabel
 from pdf_generator import PDFGenerator
 
-class BeerLabelGenerator:
+class LabelDesign1(BaseLabel):
     def __init__(self, image_path, label_data):
         self.image_path = image_path
         self.label_data = label_data.copy()
