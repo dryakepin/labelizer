@@ -3,6 +3,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter, A4
 import os
 import uuid
+from pdf_generator import PDFGenerator
 
 class BeerLabelGenerator:
     def __init__(self, image_path, label_data):
@@ -10,6 +11,7 @@ class BeerLabelGenerator:
         self.label_data = label_data.copy()
         self.label_data['font_size'] = int(self.label_data.get('font_size', 32))
         self.preview_folder = 'static/uploads'
+        self.pdf_generator = PDFGenerator(preview_folder=self.preview_folder)
     
     def _resize_and_crop(self, img, target_width, target_height):
         """Resize and crop image to target aspect ratio while maintaining proportions"""
@@ -156,55 +158,12 @@ class BeerLabelGenerator:
         return self._create_label((540, 600), True)  
     
     def generate_pdf(self, bottle_size='500ML'):
-        # Convert cm to points (1 cm = 28.35 points)
-        if bottle_size == '500ML':
-            bottle_width = 9 * 28.35  # 9cm
-            bottle_height = 10 * 28.35  # 10cm
-        else:  # 330ML
-            bottle_width = 6.3 * 28.35  # 6.3cm
-            bottle_height = 7 * 28.35  # 7cm
-
         # Generate both bottle and keg labels
         bottle_label = self._create_label((540, 600), False)  # 3:4 for bottle
         keg_label = self._create_label((540, 600), False)    # Square for keg
         
-        # Create PDF
-        pdf_path = os.path.join(self.preview_folder, f'labels_{uuid.uuid4()}.pdf')
-        c = canvas.Canvas(pdf_path, pagesize=A4)
-        
-        # Page 1: Bottle Labels (2x2 grid)
-        page_width, page_height = A4
-        margin = 36  # 0.5 inch margin
-        spacing = 20  # space between labels
-        
-        # Use the actual bottle dimensions instead of calculating from page size
-        label_width = bottle_width
-        label_height = bottle_height
-        
-        # Draw 4 bottle labels in a grid
-        positions = [
-            (margin, page_height - margin - label_height),                    # top left
-            (margin + label_width + spacing, page_height - margin - label_height),  # top right
-            (margin, margin),                                                # bottom left
-            (margin + label_width + spacing, margin)                         # bottom right
-        ]
-        
-        for x, y in positions:
-            c.drawInlineImage(bottle_label, x, y, width=label_width, height=label_height)
-            c.setFont("Helvetica", 8)
-            c.drawString(x, y - 10, f"Bottle Label ({bottle_size})")
-        
-        # Add page 2 for keg label
-        c.showPage()
-        
-        # Center the keg label on the second page
-        keg_size = min(page_width - 2 * margin, page_height - 2 * margin)
-        x = (page_width - keg_size) / 2
-        y = (page_height - keg_size) / 2
-        
-        c.drawInlineImage(keg_label, x, y, width=keg_size, height=keg_size)
-        c.setFont("Helvetica", 10)
-        c.drawString(x, y - 20, "Keg Label (Square)")
-        
-        c.save()
-        return pdf_path 
+        return self.pdf_generator.generate_pdf(
+            bottle_label=bottle_label,
+            keg_label=keg_label,
+            bottle_size=bottle_size
+        ) 
