@@ -1,12 +1,13 @@
 from flask import Flask, render_template, request, jsonify, send_file
 from werkzeug.utils import secure_filename
 import os
-from label_generator import BeerLabelGenerator
 import uuid
 from labels.label_design_1 import LabelDesign1
 from labels.label_design_2 import LabelDesign2
+from database.schema import init_db
+from database.db_manager import DBManager
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='', static_folder='static')
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
@@ -15,9 +16,47 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+# Initialize the database
+init_db()
+db_manager = DBManager()
+
+# Ensure upload folder exists
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # Get all labels from database
+    labels = db_manager.get_all_beer_labels()
+    return render_template('list.html', labels=labels)
+
+@app.route('/editor/<uuid>')
+def editor(uuid):
+    # Get label data from database if it exists
+    label_data = db_manager.get_beer_label(uuid)
+    
+    # Convert database row to dictionary if it exists
+    initial_data = {}
+    if label_data:
+        initial_data = {
+            'beer_name': label_data[1],
+            'subtitle': label_data[2],
+            'abv': label_data[3],
+            'beer_size': label_data[4],
+            'border_color': label_data[5],
+            'text_color': label_data[6],
+            'font': label_data[7],
+            'font_size': label_data[8],
+            'image_scale': label_data[9],
+            'image_rotation': label_data[10],
+            'image_x': label_data[11],
+            'image_y': label_data[12],
+            'crop_x': label_data[13],
+            'crop_y': label_data[14],
+            'description': label_data[15],
+            'design_type': label_data[16]
+        }
+    
+    return render_template('index.html', uuid=uuid, initial_data=initial_data)
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -36,7 +75,7 @@ def upload_file():
         # Get form data
         label_data = {
             'beer_name': request.form.get('beer_name', ''),
-            'brewer_name': request.form.get('brewer_name', ''),
+            'subtitle': request.form.get('subtitle', ''),
             'abv': request.form.get('abv', ''),
             'beer_size': request.form.get('beer_size', ''),
             'border_color': request.form.get('border_color', '#000000'),
@@ -67,8 +106,14 @@ def upload_file():
         generator = label_class(filepath, label_data)
         preview_path = generator.generate_preview()
         
+        # Ensure we have an absolute URL path starting with /uploads/
+        preview_url = '/uploads/' + os.path.basename(preview_path)
+        
+        print(f"Generated preview path: {preview_path}")  # Debug print
+        print(f"Generated preview URL: {preview_url}")    # Debug print
+        
         return jsonify({
-            'preview_url': preview_path,
+            'preview_url': preview_url,
             'original_file': filename
         })
     
@@ -103,4 +148,5 @@ def generate_pdf():
 
 if __name__ == '__main__':
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    init_db()  # Initialize database on startup
     app.run(debug=True) 

@@ -29,7 +29,7 @@ let currentFileName = null;
 // Define form controls
 const formControls = [
     'beer_name',
-    'brewer_name',
+    'subtitle',
     'abv',
     'beer_size',
     'border_color',
@@ -88,9 +88,6 @@ function syncRangeAndNumber(rangeId, numberId) {
     });
 }
 
-// Add the sync handlers for range/number pairs
-syncRangeAndNumber('image_rotation_range', 'image_rotation');
-
 // Add color preview functionality
 function updateColorPreview(inputId) {
     const input = document.getElementById(inputId);
@@ -139,14 +136,13 @@ document.getElementById('generatePDF').onclick = async () => {
     const formData = new FormData(form);
     const labelData = {
         beer_name: formData.get('beer_name'),
-        brewer_name: formData.get('brewer_name'),
+        subtitle: formData.get('subtitle'),
         abv: formData.get('abv'),
         beer_size: formData.get('beer_size'),
         border_color: formData.get('border_color'),
         text_color: formData.get('text_color'),
         font: formData.get('font'),
         font_size: parseInt(formData.get('font_size'), 10),
-        image_rotation: parseInt(formData.get('image_rotation'), 10),
         image_x: parseInt(formData.get('image_x'), 10),
         image_y: parseInt(formData.get('image_y'), 10),
         crop_x: parseInt(formData.get('crop_x'), 10),

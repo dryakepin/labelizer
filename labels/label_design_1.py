@@ -56,7 +56,6 @@ class LabelDesign1(BaseLabel):
             final_img = Image.new('RGB', size, 'blue')
         else:
             img = Image.open(self.image_path)
-            rotation = float(self.label_data.get('image_rotation', 0))
             x_pos = float(self.label_data.get('image_x', 50)) / 100
             y_pos = float(self.label_data.get('image_y', 50)) / 100
 
@@ -67,9 +66,6 @@ class LabelDesign1(BaseLabel):
             else:
                 square_size = min(size)
                 img = self._resize_and_crop(img, square_size, square_size)
-
-            if rotation != 0:
-                img = img.rotate(rotation, expand=True, resample=Image.Resampling.BICUBIC)
 
             final_img = Image.new('RGB', size, 'white')
             paste_x = int((size[0] - img.width) * x_pos)
@@ -84,7 +80,7 @@ class LabelDesign1(BaseLabel):
 
         # Draw text content in the box
         beer_name = self.label_data['beer_name']
-        brewer_name = self.label_data['brewer_name']
+        subtitle = self.label_data['subtitle']
         beer_size = self.label_data.get('beer_size', '500ML')
         abv_text = f"{beer_size} // {self.label_data['abv']}%/VOL"
 
@@ -95,8 +91,8 @@ class LabelDesign1(BaseLabel):
         beer_bbox = box_draw.textbbox((0, 0), beer_name, font=beer_name_font)
         current_y += beer_bbox[3] - beer_bbox[1] + text_spacing
 
-        box_draw.text((current_x, current_y), brewer_name, font=brewer_font, fill=self.label_data['text_color'])
-        brewer_bbox = box_draw.textbbox((0, 0), brewer_name, font=brewer_font)
+        box_draw.text((current_x, current_y), subtitle, font=brewer_font, fill=self.label_data['text_color'])
+        brewer_bbox = box_draw.textbbox((0, 0), subtitle, font=brewer_font)
         current_y += brewer_bbox[3] - brewer_bbox[1] + text_spacing
 
         box_draw.text((current_x, current_y), abv_text, font=abv_font, fill=self.label_data['text_color'])

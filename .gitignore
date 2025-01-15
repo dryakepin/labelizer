@@ -47,3 +47,5 @@ noset
 # Uploaded files
 static/uploads/
 
+# Database
+database/beer_labels.db
