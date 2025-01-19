@@ -6,6 +6,7 @@ from labels.label_design_1 import LabelDesign1
 from labels.label_design_2 import LabelDesign2
 from database.schema import init_db
 from database.db_manager import DBManager
+import json
 
 app = Flask(__name__, static_url_path='', static_folder='static')
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -23,7 +24,7 @@ db_manager = DBManager()
 # Ensure upload folder exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-def generate_preview_image(filepath, label_data):
+def generate_preview_image(uuid, filepath, label_data):
     """Generate a preview image and return its URL path"""
     # Get design type
     design_type = label_data.get('design_type', 'design1')
@@ -39,11 +40,13 @@ def generate_preview_image(filepath, label_data):
     
     # Generate preview using selected design
     generator = label_class(filepath, label_data)
-    preview_path = generator.generate_preview()
+    preview_path = generator.generate_preview(uuid)
     
     # Ensure we have an absolute URL path starting with /uploads/
     preview_url = '/uploads/' + os.path.basename(preview_path)
     
+    print("preview url: " + preview_url)
+
     return preview_url
 
 @app.route('/')
@@ -93,29 +96,35 @@ def editor(uuid):
             with open(temp_filepath, 'wb') as f:
                 f.write(image_data)
             
+            # Add the filename to initial_data for the file input
+            initial_data['filename'] = temp_filename
+            
             # Generate preview image
             try:
-                preview_url = generate_preview_image(temp_filepath, initial_data)
+                preview_url = generate_preview_image(uuid, temp_filepath, initial_data)
                 initial_data['background'] = preview_url
             except Exception as e:
                 print(f"Error generating preview: {e}")
     
     return render_template('index.html', uuid=uuid, initial_data=initial_data)
 
-@app.route('/upload', methods=['POST'])
-def upload_file():
+@app.route('/upload/<uuid>', methods=['POST'])
+def upload_file(uuid):
+    print("upload file")
+    print(uuid)
+
     if 'background' not in request.files:
         return jsonify({'error': 'No file provided'}), 400
-    
+
     file = request.files['background']
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
     
     if file and allowed_file(file.filename):
-        filename = secure_filename(str(uuid.uuid4()) + os.path.splitext(file.filename)[1])
+        filename = f"{uuid}.png"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
-        
+        print (filepath)
         # Get form data
         label_data = {
             'beer_name': request.form.get('beer_name', ''),
@@ -134,9 +143,11 @@ def upload_file():
             'description': request.form.get('description', ''),
             'design_type': request.form.get('design_type', 'design1')
         }
+
+        print(label_data)
         
         try:
-            preview_url = generate_preview_image(filepath, label_data)
+            preview_url = generate_preview_image(uuid, filepath, label_data)
             return jsonify({
                 'preview_url': preview_url,
                 'original_file': filename
@@ -146,8 +157,8 @@ def upload_file():
     
     return jsonify({'error': 'Invalid file type'}), 400
 
-@app.route('/generate-pdf', methods=['POST'])
-def generate_pdf():
+@app.route('/generate-pdf/<uuid>', methods=['POST'])
+def generate_pdf(uuid):
     data = request.get_json()
     filename = data.get('filename')
     label_data = data.get('label_data')
@@ -169,21 +180,27 @@ def generate_pdf():
     
     generator = label_class(filepath, label_data)
     bottle_size = label_data.get('beer_size', '500ML')
-    pdf_path = generator.generate_pdf(bottle_size=bottle_size)
+    #uuid = label_data.get('uuid')
+    pdf_path = generator.generate_pdf(uuid, bottle_size=bottle_size)
     
     return send_file(pdf_path, as_attachment=True, download_name='beer_label.pdf')
 
-@app.route('/save-label', methods=['POST'])
-def save_label():
+@app.route('/save-label/<uuid>', methods=['POST'])
+def save_label(uuid):
     try:
-        data = request.get_json()
-        uuid = data.get('uuid')
-        label_data = data.get('label_data')
-        filename = data.get('filename')
+        # Get label data from form
+        label_data = json.loads(request.form.get('label_data'))
         
-        if not uuid or not label_data:
-            return jsonify({'error': 'Missing required data'}), 400
-            
+        # Get the background file if it exists
+        background_file = None
+        if 'background' in request.files:
+            background_file = request.files['background']
+        
+        # If we have a file, read it into binary data
+        image_data = None
+        if background_file and background_file.filename:
+            image_data = background_file.read()
+        
         # Save to database
         success = db_manager.save_beer_label(
             uuid=uuid,
@@ -202,7 +219,7 @@ def save_label():
             crop_y=label_data.get('crop_y', 50),
             description=label_data.get('description', ''),
             design_type=label_data.get('design_type', 'design1'),
-            filename=filename
+            image_data=image_data
         )
         
         if success:

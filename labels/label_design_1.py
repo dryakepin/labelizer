@@ -1,6 +1,5 @@
 from PIL import Image, ImageDraw, ImageFont
 import os
-import uuid
 from .base_label import BaseLabel
 from pdf_generator import PDFGenerator
 
@@ -35,7 +34,7 @@ class LabelDesign1(BaseLabel):
         # Resize to target dimensions
         return img.resize((target_width, target_height), Image.Resampling.LANCZOS)
 
-    def _create_label(self, size, is_preview=True):
+    def _create_label(self, uuid, size, is_preview=True):
         # Define constants
         border_width = 1
         margin = 8
@@ -142,22 +141,23 @@ class LabelDesign1(BaseLabel):
 
         # Save or return the image
         if is_preview:
-            preview_path = os.path.join(self.preview_folder, f'preview_{uuid.uuid4()}.png')
+            preview_path = os.path.join(self.preview_folder, f'preview_{uuid}.png')
             final_img.save(preview_path)
             return preview_path
 
         return final_img
     
-    def generate_preview(self):
+    def generate_preview(self, uuid):
         # Generate preview for bottle label 
-        return self._create_label((540, 600), True)  
+        return self._create_label(uuid, (540, 600), True)  
     
-    def generate_pdf(self, bottle_size='500ML'):
+    def generate_pdf(self, uuid, bottle_size='500ML'):
         # Generate both bottle and keg labels
-        bottle_label = self._create_label((540, 600), False)  # 3:4 for bottle
-        keg_label = self._create_label((540*4, 600*4), False)    # Square for keg
+        bottle_label = self._create_label(uuid, (540, 600), False)  # 3:4 for bottle
+        keg_label = self._create_label(uuid, (540, 600), False)    # Square for keg
         
         return self.pdf_generator.generate_pdf(
+            uuid=uuid,
             bottle_label=bottle_label,
             keg_label=keg_label,
             bottle_size=bottle_size

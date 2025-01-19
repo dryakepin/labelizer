@@ -25,7 +25,7 @@ class LabelDesign2(BaseLabel):
         img.save(preview_path)
         return preview_path
     
-    def generate_pdf(self, bottle_size='500ML'):
+    def generate_pdf(self, uuid, bottle_size='500ML'):
         """
         Placeholder implementation - replace with actual design
         Returns path to generated PDF
@@ -36,6 +36,7 @@ class LabelDesign2(BaseLabel):
         draw.text((270, 300), "Label Design 2", fill='black', anchor="mm")
         
         return self.pdf_generator.generate_pdf(
+            uuid=uuid,
             bottle_label=img,
             keg_label=img,
             bottle_size=bottle_size

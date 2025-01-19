@@ -1,7 +1,6 @@
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 import os
-import uuid
 
 class PDFGenerator:
     def __init__(self, preview_folder='static/uploads'):
@@ -25,7 +24,7 @@ class PDFGenerator:
             'height': height_cm * 28.35
         }
 
-    def generate_pdf(self, bottle_label, keg_label, bottle_size='500ML'):
+    def generate_pdf(self, uuid, bottle_label, keg_label, bottle_size='500ML'):
         """
         Generate PDF with bottle and keg labels
         
@@ -43,7 +42,7 @@ class PDFGenerator:
         label_height = label_dims['height']
 
         # Create PDF
-        pdf_path = os.path.join(self.preview_folder, f'labels_{uuid.uuid4()}.pdf')
+        pdf_path = os.path.join(self.preview_folder, f'labels_{uuid}.pdf')
         c = canvas.Canvas(pdf_path, pagesize=A4)
         
         # Page 1: Bottle Labels

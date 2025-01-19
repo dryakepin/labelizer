@@ -11,19 +11,13 @@ class DBManager:
     
     def save_beer_label(self, uuid, beer_name, subtitle, abv, beer_size, 
                        border_color, text_color, font, font_size, image_scale,
-                       image_x, image_y, crop_x, crop_y,
-                       description, design_type, filename):
+                       image_x, image_y, crop_x, crop_y, description, 
+                       design_type, image_data):
         """Save or update a beer label in the database"""
         conn = self._get_connection()
         cursor = conn.cursor()
         
         try:
-            # Read the image file into binary data
-            image_data = None
-            if filename:
-                with open(os.path.join('static/uploads', filename), 'rb') as f:
-                    image_data = f.read()
-            
             # Check if record exists
             cursor.execute('SELECT 1 FROM BeerLabel WHERE uuid = ?', (uuid,))
             exists = cursor.fetchone() is not None
