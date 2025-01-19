@@ -62,6 +62,53 @@ formControls.forEach(controlId => {
     });
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+    if (initialData) {
+        // Text Inputs
+        document.getElementById('beer_name').value = initialData.beer_name || '';
+        document.getElementById('subtitle').value = initialData.subtitle || '';
+        document.getElementById('abv').value = initialData.abv || '';
+        document.getElementById('font_size').value = initialData.font_size || 32;
+
+        // Dropdown Select
+        document.getElementById('beer_size').value = initialData.beer_size || '500ML';
+
+        // Color Inputs
+        document.getElementById('border_color').value = initialData.border_color || '#000000';
+        document.getElementById('text_color').value = initialData.text_color || '#000000';
+
+        // Font Dropdown
+        document.getElementById('font').value = initialData.font || 'Arial';
+
+        // Range Input
+        document.getElementById('crop_x').value = initialData.crop_x || 50;
+        document.getElementById('crop_x_value').innerText = `${initialData.crop_x || 50}%`;
+
+        // Number Inputs
+        document.getElementById('image_x').value = initialData.image_x || 50;
+        document.getElementById('image_y').value = initialData.image_y || 50;
+    }
+
+    // Update range slider display value
+    const cropXInput = document.getElementById('crop_x');
+    const cropXValue = document.getElementById('crop_x_value');
+    if (cropXInput && cropXValue) {
+        cropXInput.addEventListener('input', (event) => {
+            cropXValue.innerText = `${event.target.value}%`;
+        });
+    }
+
+    // Handle background image if it exists
+    if (initialData.background) {
+        const previewSection = document.getElementById('preview');
+        const previewImage = document.getElementById('previewImage');
+        if (previewSection && previewImage) {
+            previewImage.src = initialData.background;
+            previewSection.style.display = 'block';
+        }
+    }
+});
+
 // Sync range and number inputs
 function syncRangeAndNumber(rangeId, numberId) {
     const range = document.getElementById(rangeId);
@@ -170,4 +217,54 @@ document.getElementById('generatePDF').onclick = async () => {
     }
 };
 
-// Rest of the code remains unchanged... 
+async function saveLabel() {
+    if (!currentFileName) {
+        alert('Please upload an image first');
+        return;
+    }
+
+    const formData = getFormData();
+    
+    try {
+        const response = await fetch('/save-label', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                uuid: labelUuid,
+                label_data: formData,
+                filename: currentFileName
+            }),
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('Label saved successfully!');
+        } else {
+            alert('Error saving label: ' + (data.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to save label');
+    }
+}
+
+// Update or add getFormData function
+function getFormData() {
+    return {
+        beer_name: document.getElementById('beer_name').value,
+        subtitle: document.getElementById('subtitle').value,
+        abv: document.getElementById('abv').value,
+        beer_size: document.getElementById('beer_size').value,
+        border_color: document.getElementById('border_color').value,
+        text_color: document.getElementById('text_color').value,
+        font: document.getElementById('font').value,
+        font_size: parseInt(document.getElementById('font_size').value),
+        image_x: parseFloat(document.getElementById('image_x').value),
+        image_y: parseFloat(document.getElementById('image_y').value),
+        crop_x: parseFloat(document.getElementById('crop_x').value)
+    };
+}
+

@@ -1,5 +1,6 @@
 import sqlite3
 from datetime import datetime
+import os
 
 class DBManager:
     def __init__(self, db_path='database/beer_labels.db'):
@@ -8,57 +9,59 @@ class DBManager:
     def _get_connection(self):
         return sqlite3.connect(self.db_path)
     
-    def save_beer_label(self, uuid, label_data, design_type, description, image_blob):
-        """Save a new beer label to the database"""
+    def save_beer_label(self, uuid, beer_name, subtitle, abv, beer_size, 
+                       border_color, text_color, font, font_size, image_scale,
+                       image_x, image_y, crop_x, crop_y,
+                       description, design_type, filename):
+        """Save or update a beer label in the database"""
         conn = self._get_connection()
         cursor = conn.cursor()
         
         try:
-            cursor.execute('''
-            INSERT INTO BeerLabel (
-                uuid,
-                beer_name,
-                subtitle,
-                abv,
-                beer_size,
-                border_color,
-                text_color,
-                font,
-                font_size,
-                image_scale,
-                image_x,
-                image_y,
-                crop_x,
-                crop_y,
-                description,
-                design_type,
-                label_image
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                uuid,
-                label_data.get('beer_name'),
-                label_data.get('subtitle'),
-                label_data.get('abv'),
-                label_data.get('beer_size'),
-                label_data.get('border_color'),
-                label_data.get('text_color'),
-                label_data.get('font'),
-                label_data.get('font_size'),
-                label_data.get('image_scale'),
-                label_data.get('image_x'),
-                label_data.get('image_y'),
-                label_data.get('crop_x'),
-                label_data.get('crop_y'),
-                description,
-                design_type,
-                image_blob
-            ))
+            # Read the image file into binary data
+            image_data = None
+            if filename:
+                with open(os.path.join('static/uploads', filename), 'rb') as f:
+                    image_data = f.read()
+            
+            # Check if record exists
+            cursor.execute('SELECT 1 FROM BeerLabel WHERE uuid = ?', (uuid,))
+            exists = cursor.fetchone() is not None
+            
+            if exists:
+                # Update existing record
+                cursor.execute('''
+                UPDATE BeerLabel SET
+                    beer_name = ?, subtitle = ?, abv = ?, beer_size = ?,
+                    border_color = ?, text_color = ?, font = ?, font_size = ?,
+                    image_scale = ?, image_x = ?, image_y = ?,
+                    crop_x = ?, crop_y = ?, description = ?, design_type = ?,
+                    label_image = ?
+                WHERE uuid = ?
+                ''', (beer_name, subtitle, abv, beer_size, border_color,
+                      text_color, font, font_size, image_scale,
+                      image_x, image_y, crop_x, crop_y, description, design_type,
+                      image_data, uuid))
+            else:
+                # Insert new record
+                cursor.execute('''
+                INSERT INTO BeerLabel (
+                    uuid, beer_name, subtitle, abv, beer_size,
+                    border_color, text_color, font, font_size,
+                    image_scale, image_x, image_y,
+                    crop_x, crop_y, description, design_type, label_image
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (uuid, beer_name, subtitle, abv, beer_size, border_color,
+                      text_color, font, font_size, image_scale,
+                      image_x, image_y, crop_x, crop_y, description, design_type,
+                      image_data))
             
             conn.commit()
             return True
             
         except Exception as e:
-            print(f"Error saving beer label: {e}")
+            print(f"Database error: {e}")
+            conn.rollback()
             return False
             
         finally:

@@ -9,10 +9,6 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Beer Label Generator</h1>
-            <p class="subtitle">Create custom labels for your craft beer</p>
-        </header>
         
         <div class="content-wrapper">
             <form id="labelForm" class="form-section">
@@ -122,9 +118,16 @@
                     <img id="previewImage" src="" alt="Label Preview">
                 </div>
                 <button id="generatePDF" class="secondary-button">Download PDF</button>
+                <button type="button" class="secondary-button" onclick="saveLabel()">Save Label</button>
+
             </div>
         </div>
     </div>
+    
+    <script>
+        const labelUuid = "{{ uuid }}";
+        const initialData = {{ initial_data|tojson|safe }};
+    </script>
     
     <script src="{{ url_for('static', filename='js/preview.js') }}"></script>
 </body>

@@ -155,7 +155,7 @@ class LabelDesign1(BaseLabel):
     def generate_pdf(self, bottle_size='500ML'):
         # Generate both bottle and keg labels
         bottle_label = self._create_label((540, 600), False)  # 3:4 for bottle
-        keg_label = self._create_label((540, 600), False)    # Square for keg
+        keg_label = self._create_label((540*4, 600*4), False)    # Square for keg
         
         return self.pdf_generator.generate_pdf(
             bottle_label=bottle_label,

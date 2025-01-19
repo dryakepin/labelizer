@@ -16,7 +16,7 @@ def ensure_database_exists():
     CREATE TABLE IF NOT EXISTS BeerLabel (
         uuid TEXT PRIMARY KEY,
         beer_name TEXT NOT NULL,
-        subtitle TEXT NOT NULL,
+        subtitle TEXT,
         abv TEXT,
         beer_size TEXT,
         border_color TEXT,
