@@ -61,7 +61,9 @@ document.getElementById('labelForm').addEventListener('submit', async (e) => {
 continuousUpdateControls.forEach(controlId => {
     const element = document.getElementById(controlId);
     if (element) {
-        ['change', 'input'].forEach(eventType => {
+        // For select elements (like font), only listen for 'change'
+        const events = element.tagName.toLowerCase() === 'select' ? ['change'] : ['change', 'input'];
+        events.forEach(eventType => {
             element.addEventListener(eventType, async () => {
                 const form = document.getElementById('labelForm');
                 const formData = new FormData(form);

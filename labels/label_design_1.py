@@ -40,12 +40,30 @@ class LabelDesign1(BaseLabel):
         margin = 8
         text_spacing = 8
 
-        # Define fonts
+        # Get the selected font or fall back to Arial
+        selected_font = self.label_data.get('font', 'Arial')
+        
+        # Map font names to font files
+        font_files = {
+            'Arial': 'Arial.ttf',
+            'Helvetica': 'Helvetica.ttf',
+            'Times-Roman': 'Times New Roman.ttf',
+            'Courier': 'Courier New.ttf',
+            'Verdana': 'Verdana.ttf'
+        }
+        
+        # Get font file name or fall back to Arial
+        font_file = font_files.get(selected_font, 'Arial.ttf')
+        bold_font_file = font_file.replace('.ttf', ' Bold.ttf')
+        
         try:
-            beer_name_font = ImageFont.truetype('Arial Bold.ttf', self.label_data['font_size'])
-            brewer_font = ImageFont.truetype('Arial.ttf', self.label_data['font_size'] - 10)
-            abv_font = ImageFont.truetype('Arial.ttf', self.label_data['font_size'] - 10)
-        except:
+            beer_name_font = ImageFont.truetype(bold_font_file, self.label_data['font_size'])
+            brewer_font = ImageFont.truetype(font_file, self.label_data['font_size'] - 10)
+            abv_font = ImageFont.truetype(font_file, self.label_data['font_size'] - 10)
+        except Exception as e:
+            print(f"Font error: {e}")
+            print(f"Attempted to load: {font_file} and {bold_font_file}")
+            # Fall back to default font
             beer_name_font = ImageFont.load_default()
             brewer_font = ImageFont.load_default()
             abv_font = ImageFont.load_default()
