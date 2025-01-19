@@ -100,33 +100,59 @@ document.getElementById('background').addEventListener('change', function(e) {
     }
 });
 
-// Update PDF generation to use UUID
+// Update PDF generation to use UUID and proper filename
 document.getElementById('generatePDF').onclick = async () => {
-    if (!currentFileName) return;
+    if (!currentFileName) {
+        alert('Please upload an image first');
+        return;
+    }
     
-    const form = document.getElementById('labelForm');
-    const formData = new FormData(form);
-    const labelData = {
-        uuid: labelUuid,
-        label_data: getFormData()
-    };
+    const beerName = document.getElementById('beer_name').value;
+    if (!beerName) {
+        alert('Please enter a beer name');
+        return;
+    }
+
+    console.log("currentFileName: ", currentFileName)
+    console.log("beerName: ", beerName)
     
-    const pdfResponse = await fetch('/generate-pdf/' + labelUuid, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(labelData)
-    });
+    // Get the form data
+    const formData = new FormData();
+    formData.append('label_data', JSON.stringify(getFormData()));
     
-    if (pdfResponse.ok) {
+    // Add the current background file
+    const backgroundInput = document.getElementById('background');
+    if (backgroundInput.files.length > 0) {
+        formData.append('background', backgroundInput.files[0]);
+    }
+    
+    try {
+        const pdfResponse = await fetch('/generate-pdf/' + labelUuid, {
+            method: 'POST',
+            body: formData  // Send as FormData instead of JSON
+        });
+        
+        if (!pdfResponse.ok) {
+            throw new Error('Failed to generate PDF');
+        }
+        
         const blob = await pdfResponse.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = formData.get('beer_name') + '.pdf';
+        // Sanitize filename by removing special characters
+        const sanitizedBeerName = beerName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+
+        console.log("sanitizedBeerName: ", sanitizedBeerName)
+        
+        a.download = `${sanitizedBeerName}.pdf`;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        alert('Error generating PDF: ' + error.message);
     }
 };
 
@@ -289,6 +315,7 @@ updateRangeValue('crop_x');
 // Update or add getFormData function
 function getFormData() {
     return {
+        background: document.getElementById('background').value,
         beer_name: document.getElementById('beer_name').value,
         subtitle: document.getElementById('subtitle').value,
         abv: document.getElementById('abv').value,

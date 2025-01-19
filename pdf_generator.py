@@ -24,7 +24,7 @@ class PDFGenerator:
             'height': height_cm * 28.35
         }
 
-    def generate_pdf(self, uuid, bottle_label, keg_label, bottle_size='500ML'):
+    def generate_pdf(self, beer_name, bottle_label, keg_label, bottle_size='500ML'):
         """
         Generate PDF with bottle and keg labels
         
@@ -42,7 +42,7 @@ class PDFGenerator:
         label_height = label_dims['height']
 
         # Create PDF
-        pdf_path = os.path.join(self.preview_folder, f'labels_{uuid}.pdf')
+        pdf_path = os.path.join(self.preview_folder, f'label_{beer_name}.pdf')
         c = canvas.Canvas(pdf_path, pagesize=A4)
         
         # Page 1: Bottle Labels
@@ -95,4 +95,6 @@ class PDFGenerator:
         c.drawString(x, y - 20, "Keg Label (Square)")
         
         c.save()
+
+        print("PDF generated at: ", pdf_path)
         return pdf_path 

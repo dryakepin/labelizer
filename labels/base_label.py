@@ -11,6 +11,6 @@ class BaseLabel:
         pass
 
     @abstractmethod
-    def generate_pdf(self, uuid, bottle_size='500ML'):
+    def generate_pdf(self, uuid, beer_name, bottle_size='500ML'):
         """Generate a PDF with the label layout"""
         pass 

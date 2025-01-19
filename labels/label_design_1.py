@@ -151,13 +151,15 @@ class LabelDesign1(BaseLabel):
         # Generate preview for bottle label 
         return self._create_label(uuid, (540, 600), True)  
     
-    def generate_pdf(self, uuid, bottle_size='500ML'):
+    def generate_pdf(self, uuid, beer_name, bottle_size='500ML'):
         # Generate both bottle and keg labels
         bottle_label = self._create_label(uuid, (540, 600), False)  # 3:4 for bottle
         keg_label = self._create_label(uuid, (540, 600), False)    # Square for keg
         
+        print("Generated bottle label and keg label")
+
         return self.pdf_generator.generate_pdf(
-            uuid=uuid,
+            beer_name=beer_name,
             bottle_label=bottle_label,
             keg_label=keg_label,
             bottle_size=bottle_size

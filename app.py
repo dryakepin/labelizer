@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, jsonify, send_file
 from werkzeug.utils import secure_filename
 import os
-import uuid
 from labels.label_design_1 import LabelDesign1
 from labels.label_design_2 import LabelDesign2
 from database.schema import init_db
@@ -159,16 +158,13 @@ def upload_file(uuid):
 
 @app.route('/generate-pdf/<uuid>', methods=['POST'])
 def generate_pdf(uuid):
-    data = request.get_json()
-    filename = data.get('filename')
-    label_data = data.get('label_data')
-    design_type = data.get('design_type', 'design1')  # Add design type parameter
-    
-    if not filename or not label_data:
-        return jsonify({'error': 'Missing required data'}), 400
-    
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    
+    print("generate pdf")
+    print(request.form)
+    label_data = json.loads(request.form.get('label_data'))
+    design_type = label_data.get('design_type', 'design1')  # Add design type parameter
+
+    print("design_type: ", design_type)
+
     # Select label design based on design_type
     label_class = {
         'design1': LabelDesign1,
@@ -177,12 +173,24 @@ def generate_pdf(uuid):
     
     if not label_class:
         return jsonify({'error': 'Invalid design type'}), 400
-    
-    generator = label_class(filepath, label_data)
+
     bottle_size = label_data.get('beer_size', '500ML')
+    beer_name = label_data.get('beer_name', 'Beer Name')
+
+    print("beer_name: ", beer_name)
+    print("bottle_size: ", bottle_size)
+
+    temp_filename = f"{uuid}.png"
+    temp_filepath = os.path.join(app.config['UPLOAD_FOLDER'], temp_filename)
+
+    generator = label_class(temp_filepath, label_data)
+
     #uuid = label_data.get('uuid')
-    pdf_path = generator.generate_pdf(uuid, bottle_size=bottle_size)
+    pdf_path = generator.generate_pdf(uuid, beer_name, bottle_size=bottle_size)
     
+
+    print("pdf_path: ", pdf_path)
+
     return send_file(pdf_path, as_attachment=True, download_name='beer_label.pdf')
 
 @app.route('/save-label/<uuid>', methods=['POST'])
